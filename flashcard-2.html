@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard あ・い</title>
+
+    <style>
+        body {
+            background: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .tab {
+            padding: 10px 25px;
+            cursor: pointer;
+            background: #1e1e1e;
+            margin: 0 5px;
+            border-radius: 8px;
+        }
+
+        .tab.active {
+            background: #2979ff;
+        }
+
+        .container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card-wrapper {
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 400px;
+            height: 220px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-radius: 15px;
+        }
+
+        .front {
+            background: #1f1f1f;
+            font-size: 28px;
+        }
+
+        .hira {
+            font-size: 16px;
+            color: #aaa;
+            margin-top: 8px;
+        }
+
+        .back {
+            background: #333;
+            transform: rotateY(180deg);
+            font-size: 20px;
+        }
+
+        button {
+            margin: 10px 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2979ff;
+            color: white;
+        }
+
+        .success {
+            background: #00c853;
+            color: white;
+        }
+
+        .warning {
+            background: #ffab00;
+        }
+
+        .danger {
+            background: #d50000;
+            color: white;
+        }
+
+        .progress {
+            margin-top: 10px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>📚 Flashcard Nhật Việt</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('a')">あ</div>
+        <div class="tab" onclick="switchTab('i')">い</div>
+    </div>
+
+    <div class="container">
+        <div class="card-wrapper">
+            <div class="card" id="card" onclick="flipCard()">
+                <div class="card-face front">
+                    <div id="kanji"></div>
+                    <div class="hira" id="hira"></div>
+                </div>
+                <div class="card-face back" id="meaning"></div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <button class="primary" onclick="prevCard()">⬅</button>
+        <button class="primary" onclick="nextCard()">➡</button>
+        <button class="success" onclick="shuffle()">🔀 Shuffle</button>
+        <button class="warning" onclick="toggleHard()">⭐ Từ khó</button>
+        <button class="danger" onclick="showHard()">📌 Chỉ từ khó</button>
+    </div>
+
+    <div class="progress" id="progress"></div>
+
+    <script>
+
+        const data = {
+            a: [
+                { kanji: "相変わらず", hira: "あいかわらず", meaning: "vẫn" },
+                { kanji: "相次いで", hira: "あいついで", meaning: "liên tiếp" },
+                { kanji: "相手", hira: "あいて", meaning: "đối tượng" },
+                { kanji: "アイデア", hira: "あいであ", meaning: "ý tưởng" },
+                { kanji: "あいにく", hira: "あいにく", meaning: "tội nghiệp, khổ thân" },
+                { kanji: "あいまい", hira: "あいまい", meaning: "mập mờ, không rõ ràng" },
+                { kanji: "遭う", hira: "あう", meaning: "gặp" },
+                { kanji: "合う", hira: "あう", meaning: "~ nhau" },
+                { kanji: "青白い", hira: "あおじろい", meaning: "xanh xao, nhợt nhạt" },
+                { kanji: "赤字", hira: "あかじ", meaning: "lỗ" },
+                { kanji: "あがる", hira: "あがる", meaning: "căng thẳng" },
+                { kanji: "上がる", hira: "あがる", meaning: "~ xong, ~ lên" },
+                { kanji: "飽きっぽい", hira: "あきっぽい", meaning: "dễ chán" },
+                { kanji: "あきらめる", hira: "あきらめる", meaning: "từ bỏ ý định" },
+                { kanji: "飽きる", hira: "あきる", meaning: "chán" },
+                { kanji: "あきれる", hira: "あきれる", meaning: "sốc, kinh ngạc" },
+                { kanji: "悪～", hira: "あく～", meaning: "~ xấu" },
+                { kanji: "握手", hira: "あくしゅ", meaning: "bắt tay" },
+                { kanji: "あくび", hira: "あくび", meaning: "ngáp" },
+                { kanji: "あくまで", hira: "あくまで", meaning: "đến cùng" },
+                { kanji: "明け方", hira: "あけがた", meaning: "lúc tảng sáng" },
+                { kanji: "明ける", hira: "あける", meaning: "kết thúc" },
+                { kanji: "揚げる", hira: "あげる", meaning: "rán, chiên" },
+                { kanji: "あこがれる", hira: "あこがれる", meaning: "ngưỡng mộ" },
+                { kanji: "味付け", hira: "あじつけ", meaning: "nêm" },
+                { kanji: "味わう", hira: "あじわう", meaning: "thử, nếm" },
+                { kanji: "足を延ばす", hira: "あしをのばす", meaning: "đi thêm" },
+                { kanji: "足を運ぶ", hira: "あしをはこぶ", meaning: "cất công đến" },
+                { kanji: "足を引っ張る", hira: "あしをひっぱる", meaning: "ngáng chân" },
+                { kanji: "預ける", hira: "あずける", meaning: "gửi" },
+                { kanji: "汗", hira: "あせ", meaning: "mồ hôi" },
+                { kanji: "遊び回る", hira: "あそびまわる", meaning: "chơi khắp" },
+                { kanji: "与える", hira: "あたえる", meaning: "trao, đưa" },
+                { kanji: "あたかも", hira: "あたかも", meaning: "cứ như thể" },
+                { kanji: "温かみ", hira: "あたたかみ", meaning: "sự ấm áp" },
+                { kanji: "温まる", hira: "あたたまる", meaning: "được làm ấm" },
+                { kanji: "暖まる", hira: "あたたまる", meaning: "ấm" },
+                { kanji: "温め直す", hira: "あたためなおす", meaning: "làm nóng lại" },
+                { kanji: "温める", hira: "あたためる", meaning: "làm nóng" },
+                { kanji: "暖める", hira: "あたためる", meaning: "làm ấm" },
+                { kanji: "頭が上がらない", hira: "あたまがあがらない", meaning: "kính nể" },
+                { kanji: "頭が痛い", hira: "あたまがいたい", meaning: "đau đầu (lo nghĩ)" },
+                { kanji: "頭が固い", hira: "あたまがかたい", meaning: "cứng nhắc" },
+                { kanji: "頭に来る", hira: "あたまにくる", meaning: "điên tiết" },
+                { kanji: "頭を下げる", hira: "あたまをさげる", meaning: "cúi đầu" },
+                { kanji: "頭を冷やす", hira: "あたまをひやす", meaning: "bình tĩnh" },
+                { kanji: "扱い", hira: "あつかい", meaning: "đối xử" },
+                { kanji: "厚かましい", hira: "あつかましい", meaning: "trâng tráo" },
+                { kanji: "集まり", hira: "あつまり", meaning: "tụ tập" },
+                { kanji: "厚み", hira: "あつみ", meaning: "độ dày" },
+                { kanji: "あてはまる", hira: "あてはまる", meaning: "trùng khít" },
+                { kanji: "あてはめる", hira: "あてはめる", meaning: "áp dụng" },
+                { kanji: "跡", hira: "あと", meaning: "dấu vết" },
+                { kanji: "アドレス帳", hira: "あどれすちょう", meaning: "sổ địa chỉ" },
+                { kanji: "暴れる", hira: "あばれる", meaning: "quậy phá" },
+                { kanji: "甘み", hira: "あまみ", meaning: "độ ngọt" },
+                { kanji: "編み上がる", hira: "あみあがる", meaning: "đan xong" },
+                { kanji: "編み物", hira: "あみもの", meaning: "đồ đan" },
+                { kanji: "編む", hira: "あむ", meaning: "đan" },
+                { kanji: "危うい", hira: "あやうい", meaning: "nguy hại" },
+                { kanji: "怪しむ", hira: "あやしむ", meaning: "nghi ngờ" },
+                { kanji: "荒い", hira: "あらい", meaning: "dữ dội" },
+                { kanji: "粗い", hira: "あらい", meaning: "thô" },
+                { kanji: "あらかじめ", hira: "あらかじめ", meaning: "trước" },
+                { kanji: "あらし", hira: "あらし", meaning: "gió bão" },
+                { kanji: "粗筋", hira: "あらすじ", meaning: "ý chính" },
+                { kanji: "改めて", hira: "あらためて", meaning: "lại" },
+                { kanji: "改める", hira: "あらためる", meaning: "sửa đổi" },
+                { kanji: "あらゆる", hira: "あらゆる", meaning: "tất cả" },
+                { kanji: "ありがたい", hira: "ありがたい", meaning: "biết ơn" },
+                { kanji: "ありがたさ", hira: "ありがたさ", meaning: "sự may mắn" },
+                { kanji: "歩き出す", hira: "あるきだす", meaning: "bắt đầu bước" },
+                { kanji: "歩き回る", hira: "あるきまわる", meaning: "đi khắp" },
+                { kanji: "あれこれ", hira: "あれこれ", meaning: "cái này cái kia" },
+                { kanji: "荒れる", hira: "あれる", meaning: "sần sùi" },
+                { kanji: "慌ただしい", hira: "あわただしい", meaning: "cập rập" },
+                { kanji: "慌てる", hira: "あわてる", meaning: "cuống quýt" },
+                { kanji: "哀れ", hira: "あわれ", meaning: "đáng thương" },
+                { kanji: "案", hira: "あん", meaning: "phương án" },
+                { kanji: "安易", hira: "あんい", meaning: "dễ dàng" },
+                { kanji: "案外", hira: "あんがい", meaning: "không ngờ" },
+                { kanji: "暗記", hira: "あんき", meaning: "học thuộc" },
+                { kanji: "安全性", hira: "あんぜんせい", meaning: "tính an toàn" },
+                { kanji: "案の定", hira: "あんのじょう", meaning: "đúng như dự đoán" },
+
+            ],
+
+            i: [
+                { kanji: "言い出す", hira: "いいだす", meaning: "bắt đầu nói" },
+                { kanji: "言い訳", hira: "いいわけ", meaning: "biện minh" },
+                { kanji: "家出", hira: "いえで", meaning: "bỏ nhà đi" },
+                { kanji: "いきいき", hira: "いきいき", meaning: "sinh động, đầy sức sống" },
+                { kanji: "生きがい", hira: "いきがい", meaning: "lý do sống" },
+                { kanji: "行き違い", hira: "いきちがい", meaning: "hiểu lầm, lỡ nhau" },
+                { kanji: "行き止まり", hira: "いきどまり", meaning: "đường cụt" },
+                { kanji: "意義", hira: "いぎ", meaning: "ý nghĩa" },
+                { kanji: "いくぶん", hira: "いくぶん", meaning: "phần nào" },
+                { kanji: "以後", hira: "いご", meaning: "từ nay về sau" },
+                { kanji: "いざ", hira: "いざ", meaning: "khi thực sự" },
+                { kanji: "医師", hira: "いし", meaning: "bác sĩ" },
+                { kanji: "意識", hira: "いしき", meaning: "ý thức" },
+                { kanji: "意思", hira: "いし", meaning: "ý chí" },
+                { kanji: "いじめる", hira: "いじめる", meaning: "bắt nạt" },
+                { kanji: "移住", hira: "いじゅう", meaning: "di cư" },
+                { kanji: "異常", hira: "いじょう", meaning: "bất thường" },
+                { kanji: "以前", hira: "いぜん", meaning: "trước đây" },
+                { kanji: "忙しい", hira: "いそがしい", meaning: "bận rộn" },
+                { kanji: "急ぐ", hira: "いそぐ", meaning: "vội" },
+                { kanji: "板", hira: "いた", meaning: "tấm ván" },
+                { kanji: "偉大", hira: "いだい", meaning: "vĩ đại" },
+                { kanji: "抱く", hira: "いだく", meaning: "ôm, ấp ủ" },
+                { kanji: "痛み", hira: "いたみ", meaning: "nỗi đau" },
+                { kanji: "至る", hira: "いたる", meaning: "đạt đến" },
+                { kanji: "一応", hira: "いちおう", meaning: "đại khái" },
+                { kanji: "一時", hira: "いちじ", meaning: "một thời" },
+                { kanji: "一度に", hira: "いちどに", meaning: "cùng một lúc" },
+                { kanji: "市場", hira: "いちば", meaning: "thị trường" },
+                { kanji: "一流", hira: "いちりゅう", meaning: "hàng đầu" },
+                { kanji: "いつか", hira: "いつか", meaning: "một ngày nào đó" },
+                { kanji: "一家", hira: "いっか", meaning: "một gia đình" },
+                { kanji: "一種", hira: "いっしゅ", meaning: "một loại" },
+                { kanji: "一瞬", hira: "いっしゅん", meaning: "một khoảnh khắc" },
+                { kanji: "一生", hira: "いっしょう", meaning: "cả đời" },
+                { kanji: "一層", hira: "いっそう", meaning: "hơn nữa" },
+                { kanji: "一般", hira: "いっぱん", meaning: "chung, phổ biến" },
+                { kanji: "一方", hira: "いっぽう", meaning: "một mặt" },
+                { kanji: "いつの間にか", hira: "いつのまにか", meaning: "tự lúc nào không hay" },
+                { kanji: "移動", hira: "いどう", meaning: "di chuyển" },
+                { kanji: "祈る", hira: "いのる", meaning: "cầu nguyện" },
+                { kanji: "違反", hira: "いはん", meaning: "vi phạm" },
+                { kanji: "衣服", hira: "いふく", meaning: "quần áo" },
+                { kanji: "今にも", hira: "いまにも", meaning: "bất cứ lúc nào" },
+                { kanji: "今さら", hira: "いまさら", meaning: "bây giờ thì đã muộn" },
+                { kanji: "いよいよ", hira: "いよいよ", meaning: "cuối cùng thì" },
+                { kanji: "依頼", hira: "いらい", meaning: "nhờ cậy" },
+                { kanji: "以来", hira: "いらい", meaning: "kể từ" },
+                { kanji: "いらいら", hira: "いらいら", meaning: "bực bội" },
+                { kanji: "衣料", hira: "いりょう", meaning: "vải vóc" },
+                { kanji: "医療", hira: "いりょう", meaning: "y tế" },
+                { kanji: "入れ替える", hira: "いれかえる", meaning: "thay thế" },
+                { kanji: "入力", hira: "いりょく", meaning: "nhập dữ liệu" },
+                { kanji: "異論", hira: "いろん", meaning: "ý kiến trái chiều" },
+                { kanji: "祝う", hira: "いわう", meaning: "chúc mừng" },
+                { kanji: "印象", hira: "いんしょう", meaning: "ấn tượng" },
+                { kanji: "引退", hira: "いんたい", meaning: "nghỉ hưu" },
+                { kanji: "引用", hira: "いんよう", meaning: "trích dẫn" },
+
+            ]
+        };
+
+        let currentTab = "a";
+        let flashcards = data[currentTab];
+        let index = 0;
+        let hardList = JSON.parse(localStorage.getItem("hard")) || [];
+
+        function switchTab(tab) {
+            currentTab = tab;
+            flashcards = data[tab];
+            index = 0;
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            event.target.classList.add("active");
+            update();
+        }
+
+        function update() {
+            document.getElementById("kanji").innerText = flashcards[index].kanji;
+            document.getElementById("hira").innerText = flashcards[index].hira;
+            document.getElementById("meaning").innerText = flashcards[index].meaning;
+            document.getElementById("progress").innerText = (index + 1) + " / " + flashcards.length;
+            document.getElementById("card").classList.remove("flip");
+        }
+
+        function flipCard() {
+            document.getElementById("card").classList.toggle("flip");
+        }
+
+        function nextCard() {
+            index = (index + 1) % flashcards.length;
+            update();
+        }
+
+        function prevCard() {
+            index = (index - 1 + flashcards.length) % flashcards.length;
+            update();
+        }
+
+        function shuffle() {
+            flashcards.sort(() => Math.random() - 0.5);
+            index = 0;
+            update();
+        }
+
+        function toggleHard() {
+            const word = flashcards[index].kanji;
+            if (hardList.includes(word)) {
+                hardList = hardList.filter(w => w !== word);
+            } else {
+                hardList.push(word);
+            }
+            localStorage.setItem("hard", JSON.stringify(hardList));
+            alert("Đã cập nhật từ khó ⭐");
+        }
+
+        function showHard() {
+            flashcards = flashcards.filter(f => hardList.includes(f.kanji));
+            index = 0;
+            update();
+        }
+
+        update();
+
+    </script>
+
+</body>
+
+</html>
